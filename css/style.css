@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
 /* ========== Дизайн-система ========== */
 :root {
@@ -12,14 +12,52 @@
     --muted: #7b7266;
     --accent: #1e3a6e;
     --footer-link: #a89f92;
-    --serif: 'Newsreader', 'PT Serif', Georgia, serif;
-    --sans: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --display: 'Unbounded', 'Golos Text', system-ui, sans-serif;
+    --sans: 'Golos Text', system-ui, -apple-system, 'Segoe UI', sans-serif;
     --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Consolas, monospace;
     --r-sm: 8px;
     --r-md: 12px;
     --ease: cubic-bezier(0.22, 1, 0.36, 1);
     --header-h: 64px;
 }
+
+/* Тёмная тема: все цвета через токены — сайту достаточно переопределить их */
+html[data-theme="dark"] {
+    --bg: #05070d;
+    --surface: #0d1424;
+    --raised: #101a2c;
+    --hairline: rgba(245, 242, 236, 0.08);
+    --hairline-strong: rgba(245, 242, 236, 0.20);
+    --text: #e8ecf4;
+    --secondary: #a3adc2;
+    --muted: #7d889e;
+    --accent: #3d7bff;
+    --footer-link: #93a0b8;
+}
+
+html[data-theme="dark"] body {
+    background: linear-gradient(180deg, #05070d 0%, #060a12 55%, #0b1220 100%);
+}
+
+html[data-theme="dark"] header {
+    background: rgba(5, 7, 13, 0.82);
+    border-bottom-color: rgba(245, 242, 236, 0.08);
+    backdrop-filter: blur(10px) saturate(1.2);
+    -webkit-backdrop-filter: blur(10px) saturate(1.2);
+}
+
+html[data-theme="dark"] footer { background: #0a0f1c; }
+
+html[data-theme="dark"] .footer-brand .logo {
+    background: var(--text);
+    color: var(--bg);
+}
+
+html[data-theme="dark"] .btn-primary {
+    background: var(--accent);
+    color: #05070d;
+}
+html[data-theme="dark"] .btn-primary:hover { background: #6b99ff; }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -83,8 +121,8 @@ header {
     border-radius: var(--r-sm);
     background: var(--text);
     color: var(--bg);
-    font-family: var(--serif);
-    font-size: 15px;
+    font-family: var(--display);
+    font-size: 12px;
     font-weight: 500;
 }
 
@@ -154,11 +192,11 @@ main { flex: 1; padding: 0 0 96px; }
 .page-hero { padding: 72px 0 40px; }
 
 .page-title {
-    font-family: var(--serif);
-    font-size: clamp(2rem, 4vw, 2.5rem);
-    font-weight: 500;
-    line-height: 1.15;
-    letter-spacing: -0.01em;
+    font-family: var(--display);
+    font-size: clamp(1.4rem, 2.6vw, 1.9rem);
+    font-weight: 400;
+    line-height: 1.25;
+    letter-spacing: 0;
 }
 
 /* ========== Hero ========== */
@@ -191,11 +229,11 @@ main { flex: 1; padding: 0 0 96px; }
 }
 
 .hero h2 {
-    font-family: var(--serif);
-    font-size: clamp(2.5rem, 5.5vw, 4rem);
+    font-family: var(--display);
+    font-size: clamp(1.9rem, 4.4vw, 2.9rem);
     font-weight: 500;
-    line-height: 1.05;
-    letter-spacing: -0.02em;
+    line-height: 1.15;
+    letter-spacing: 0;
     margin-bottom: 20px;
 }
 
@@ -246,11 +284,11 @@ main { flex: 1; padding: 0 0 96px; }
     color: var(--muted);
 }
 .next-up-date {
-    font-family: var(--mono);
-    font-size: 40px;
-    font-weight: 500;
+    font-family: var(--display);
+    font-size: 32px;
+    font-weight: 400;
     line-height: 1.2;
-    letter-spacing: -0.02em;
+    letter-spacing: 0;
     color: var(--accent);
     font-variant-numeric: tabular-nums;
     margin: 12px 0 8px;
@@ -271,10 +309,10 @@ main { flex: 1; padding: 0 0 96px; }
     border-bottom: 1px solid var(--hairline-strong);
 }
 .events-head h2 {
-    font-family: var(--serif);
-    font-size: 2rem;
+    font-family: var(--display);
+    font-size: 1.5rem;
     font-weight: 500;
-    letter-spacing: -0.01em;
+    letter-spacing: 0;
 }
 .events-meta {
     margin-left: auto;
@@ -301,10 +339,10 @@ main { flex: 1; padding: 0 0 96px; }
 }
 
 .event-body h3 {
-    font-family: var(--serif);
-    font-size: 1.4rem;
+    font-family: var(--display);
+    font-size: 1.1rem;
     font-weight: 500;
-    line-height: 1.25;
+    line-height: 1.3;
     margin-bottom: 12px;
 }
 .event-body > p {
@@ -581,4 +619,191 @@ footer {
 @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     * { transition: none !important; }
+}
+
+/* ========== Sky hero (главная) ========== */
+:root {
+    --sky-bg: #05070d;
+    --sky-bg2: #0b1220;
+    --sky-text: #e8ecf4;
+    --sky-text2: #9aa4b8;
+    --sky-accent: #3d7bff;
+    --sky-ring: #4d8dff;
+}
+
+/* Тёмная шапка теперь управляется токеноми темы (html[data-theme="dark"] header) */
+
+/* Тёмная «полноэкранная» hero: небо (канвас), фото-планета, звёзды, купол.
+   Активна только в тёмной теме; в светлой главная — обычная светлая hero. */
+html[data-theme="dark"] .hero-sky {
+    position: relative;
+    overflow: hidden;
+    width: calc(100% + 2 * (50vw - 50%));
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    padding: var(--sky-zone, 96px) calc(50vw - 50%) 64px;
+    background: linear-gradient(to bottom, var(--sky-bg) 0%, var(--sky-bg) 55%, var(--sky-bg2) 100%);
+    border-bottom: 1px solid rgba(245, 242, 236, 0.08);
+    min-height: calc(100vh - var(--header-h));
+}
+
+/* В светлой теме небо на главной скрыто */
+html[data-theme="light"] #sky,
+html[data-theme="light"] #sky-glow,
+html[data-theme="light"] .sky-planet {
+    display: none;
+}
+
+#sky-glow {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 0;
+    width: var(--gs, 300px);
+    height: var(--gs, 300px);
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0.8;
+    transform: translate(calc(var(--gx, 0px) - 50%), calc(var(--gy, 0px) - 50%));
+    background: radial-gradient(circle,
+        rgba(77, 141, 255, 0.30) 0%,
+        rgba(77, 141, 255, 0.10) 42%,
+        transparent 70%);
+    animation: sky-breathe 5s ease-in-out infinite;
+}
+@keyframes sky-breathe {
+    50% { opacity: 1; }
+}
+
+#sky {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: block;
+    pointer-events: none;
+}
+
+/* «Планета» — фото класса в круге; размер/позицию ставит sky.js */
+.sky-planet {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 2;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    pointer-events: none;
+    will-change: transform;
+    box-shadow: 0 0 0 1px rgba(77, 141, 255, 0.25), 0 0 64px rgba(77, 141, 255, 0.28);
+}
+
+.hero-sky .hero-grid { position: relative; z-index: 3; }
+
+html[data-theme="dark"] .hero-sky h2 { color: var(--sky-text); }
+html[data-theme="dark"] .hero-sky .hero-text { color: var(--sky-text2); }
+html[data-theme="dark"] .hero-sky .hero-meta { color: var(--sky-text2); }
+html[data-theme="dark"] .hero-sky .hero-meta::before { background: rgba(245, 242, 236, 0.35); }
+
+html[data-theme="dark"] .hero-sky .btn-primary { background: var(--sky-accent); color: #05070d; }
+html[data-theme="dark"] .hero-sky .btn-primary:hover { background: #6b99ff; }
+html[data-theme="dark"] .hero-sky .btn-ghost {
+    background: transparent;
+    border-color: rgba(245, 242, 236, 0.22);
+    color: var(--sky-text);
+}
+html[data-theme="dark"] .hero-sky .btn-ghost:hover { background: rgba(245, 242, 236, 0.06); }
+
+html[data-theme="dark"] .hero-sky .next-up {
+    background: rgba(11, 18, 32, 0.66);
+    border-color: rgba(61, 123, 255, 0.35);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+html[data-theme="dark"] .hero-sky .next-up-label { color: var(--sky-text2); }
+html[data-theme="dark"] .hero-sky .next-up-date { color: var(--sky-ring); }
+html[data-theme="dark"] .hero-sky .next-up-text { color: var(--sky-text2); }
+
+@media (max-width: 900px) {
+    .hero-sky .next-up { margin: 0 auto; width: 100%; max-width: 440px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #sky-glow { animation: none; }
+}
+
+/* ========== Фоновое небо: остальные страницы (только тёмная тема) ==========
+   fixed-канвас за всем контентом: звёзды + планеты солнечной системы */
+#sky-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    display: block;
+    pointer-events: none;
+}
+html[data-theme="light"] #sky-bg { display: none; }
+/* в тёмной теме burst/trail рисует sky.js — канвас symbols.js не нужен */
+html[data-theme="dark"] .symbols-burst { display: none; }
+/* контент — поверх фиксированного канваса */
+html[data-theme="dark"] main,
+html[data-theme="dark"] footer {
+    position: relative;
+    z-index: 1;
+}
+
+/* ========== Переключатель темы (правый нижний угол, остаётся при прокрутке) ========== */
+#theme-toggle {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 9000;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid var(--hairline-strong);
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.22);
+    cursor: pointer;
+    display: block;
+    overflow: hidden;
+    transition: transform 150ms var(--ease), background-color 150ms var(--ease), border-color 150ms var(--ease);
+}
+#theme-toggle:hover { transform: scale(1.06); }
+#theme-toggle:active { transform: scale(0.96); }
+#theme-toggle svg {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    display: none;
+}
+#theme-toggle.is-dark .tt-sun { display: block; }
+#theme-toggle:not(.is-dark) .tt-moon { display: block; }
+
+@media (max-width: 640px) {
+    #theme-toggle { right: 16px; bottom: 16px; width: 44px; height: 44px; }
+}
+
+/* Шлейф-драг не должен выделять текст рядом: выборка выключена
+   (body и, явно, hero-зоны / canvas / карточки) */
+body {
+    -webkit-user-select: none;
+    user-select: none;
+}
+.hero-sky,
+#sky,
+.sky-planet,
+.next-up {
+    -webkit-user-select: none;
+    user-select: none;
+}
+.sky-planet {
+    -webkit-user-drag: none;
 }

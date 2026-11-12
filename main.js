@@ -111,4 +111,34 @@
         }, { threshold: 0.1, rootMargin: '0px 0px -4% 0px' });
         items.forEach(function (el) { observer.observe(el); });
     }
+
+    /* Переключатель темы (правый нижний угол, fixed — остаётся при прокрутке).
+       Тема сохраняется в localStorage['cpm-theme']; при переключении
+       шлётся cpm-themechange (sky.js / symbols.js перестраиваются). */
+    (function () {
+        var root = document.documentElement;
+        var themeBtn = document.createElement('button');
+        themeBtn.id = 'theme-toggle';
+        themeBtn.type = 'button';
+        themeBtn.innerHTML =
+            '<svg class="tt-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.6M12 18.8v2.6M2.6 12h2.6M18.8 12h2.6M5.5 5.5l1.9 1.9M16.6 16.6l1.9 1.9M18.5 5.5l-1.9 1.9M7.4 16.6l-1.9 1.9"/></svg>' +
+            '<svg class="tt-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.4 13.4A8.4 8.4 0 0 1 10.6 3.6a8.4 8.4 0 1 0 9.8 9.8Z"/></svg>';
+        document.body.appendChild(themeBtn);
+
+        function refreshToggle() {
+            var dark = root.getAttribute('data-theme') === 'dark';
+            themeBtn.classList.toggle('is-dark', dark);
+            themeBtn.setAttribute('aria-label', dark ? 'Включить светлую тему' : 'Включить тёмную тему');
+        }
+
+        themeBtn.addEventListener('click', function () {
+            var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            root.setAttribute('data-theme', next);
+            try { localStorage.setItem('cpm-theme', next); } catch (e) {}
+            refreshToggle();
+            window.dispatchEvent(new CustomEvent('cpm-themechange', { detail: { theme: next } }));
+        });
+
+        refreshToggle();
+    })();
 })();

@@ -4,9 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Школа ЦПМ — Расписание</title>
+    <script>
+        (function () {
+            var t = 'dark';
+            try { t = localStorage.getItem('cpm-theme') || 'dark'; } catch (e) {}
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+    <canvas id="sky-bg" aria-hidden="true"></canvas>
     <header>
         <div class="header-inner">
             <div class="brand">
@@ -131,5 +139,7 @@
     </footer>
 
     <script src="main.js"></script>
+    <script src="sky.js"></script>
+    <script src="symbols.js"></script>
 </body>
 </html>

@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Школа ЦПМ — Главная</title>
+    <script>
+        (function () {
+            var t = 'dark';
+            try { t = localStorage.getItem('cpm-theme') || 'dark'; } catch (e) {}
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -30,7 +37,10 @@
 
     <main>
         <div class="container">
-            <section class="hero">
+            <section class="hero hero-sky">
+                <div id="sky-glow" aria-hidden="true"></div>
+                <canvas id="sky" aria-hidden="true"></canvas>
+                <img id="sky-planet" class="sky-planet" src="assets/class8n.jpg" alt="" aria-hidden="true" draggable="false">
                 <div class="hero-grid">
                     <div class="hero-content">
                         <p class="hero-meta" data-reveal data-stagger="0">Учебный год 2026 / 2027</p>
@@ -124,5 +134,7 @@
     </footer>
 
     <script src="main.js"></script>
+    <script src="sky.js"></script>
+    <script src="symbols.js"></script>
 </body>
 </html>
