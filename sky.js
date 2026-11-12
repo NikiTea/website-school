@@ -37,9 +37,24 @@
     var STAR_COL = '#e8ecf4';
     var DOME_COL = '#b9c4dd';
     var RING_COL = '#6b8cff';
+    var NEB1C = { r: 120, g: 90, b: 220, a: 0.14 };   /* глубина неба: туманности (loadPalette) */
+    var NEB2C = { r: 40, g: 160, b: 175, a: 0.10 };
+    var COMETC = { r: 255, g: 255, b: 255, a: 1 };
 
     /* палитра неба из CSS-переменных темы: пересобирается при layout()
        и при cpm-themechange */
+    function parseRGBA(str, fallback) {
+        var m = /rgba?\(([^)]+)\)/.exec(str || '');
+        if (!m) return fallback || { r: 0, g: 0, b: 0, a: 1 };
+        var p = m[1].split(',');
+        return {
+            r: (parseInt(p[0], 10) || 0),
+            g: (parseInt(p[1], 10) || 0),
+            b: (parseInt(p[2], 10) || 0),
+            a: p.length > 3 ? (parseFloat(p[3]) || 1) : 1
+        };
+    }
+
     function loadPalette() {
         try {
             var cs = getComputedStyle(document.documentElement);
@@ -49,6 +64,9 @@
             if (star) STAR_COL = star;
             if (ring) RING_COL = ring;
             if (dome) DOME_COL = dome;
+            NEB1C = parseRGBA(cs.getPropertyValue('--sky-neb-1').trim(), NEB1C);
+            NEB2C = parseRGBA(cs.getPropertyValue('--sky-neb-2').trim(), NEB2C);
+            COMETC = parseRGBA(cs.getPropertyValue('--sky-comet').trim(), COMETC);
         } catch (e) { /* оставляем дефолтные цвета */ }
     }
     var DCELL = 32, DROWS = 14, DRAD = 984;       /* dome: ячейка 32px, 14 рядов, хорда от R=984 */
@@ -68,7 +86,9 @@
         { key: 'earth',   r: 9,   c1: '#8fc0ff', c2: '#3565d8', a: 0.60, v: 4.5 },
         { key: 'mars',    r: 6,   c1: '#e8925f', c2: '#b3562f', a: 0.55, v: 6.5 },
         { key: 'saturn',  r: 11,  ring: true, c1: '#efe0b4', c2: '#b3985f', a: 0.50, v: 3.5 },
-        { key: 'jupiter', r: 13,  bands: true, c1: '#e6cda4', c2: '#a67c4f', a: 0.45, v: 2.5 }
+        { key: 'jupiter', r: 13,  bands: true, c1: '#e6cda4', c2: '#a67c4f', a: 0.45, v: 2.5 },
+        { key: 'neptune', r: 10,  halo: true, c1: '#8fb4e6', c2: '#3a5fa8', a: 0.55, v: 3.0 },
+        { key: 'uranus',  r: 8,   halo: true, c1: '#bfe3e0', c2: '#7fb0ac', a: 0.50, v: 4.0 }
     ];
 
     var mqReduce = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -82,6 +102,7 @@
     var parX = 0, parY = 0, parTX = 0, parTY = 0;    /* параллакс (lerp) */
     var heroLeft = 0, heroTop = 0;
     var stars = [], dome = [], ring = [], ring2 = [], solars = [];
+    var nebula = [], comets = [], cometWait = 2;       /* глубина неба: туманности + редкие кометы */
     var parts = [];
     var trail = [];                                    /* слабый шлейф при удержании */
     var holding = false;
@@ -89,6 +110,7 @@
     var raf = 0, lastDraw = 0, lastNow = 0, bootAt = 0;
     var swapAcc = 0, driftAcc = 0, domeAcc = 0;
     var lastGx = NaN, lastGy = NaN;
+    var SAT_SPIN = TAU / 14;                            /* спутник вокруг фото: полный оборот ≈ 14 c */
 
     function mulberry32(seed) {
         var t = seed >>> 0;
@@ -165,6 +187,8 @@
         buildDome();
         buildRing();
         buildSolar();
+        buildNebula();
+        comets.length = 0; cometWait = 1.5 + Math.random() * 3;
         setGlow();
         sync();
     }
@@ -274,7 +298,7 @@
         solars = [];
         var rnd = mulberry32(777);
         /* больше планет → «все» планеты системы кружат одновременно */
-        var n = W >= 1024 ? (mode === 'hero' ? 5 : 6) : (W >= 640 ? 4 : 3);
+        var n = W >= 1024 ? (mode === 'hero' ? 6 : 7) : (W >= 640 ? 4 : 3);
         var scale = W >= 1024 ? 1 : (W >= 640 ? 0.78 : 0.58);
         var pool = SOLAR.slice();
         var picks = [];
@@ -304,6 +328,100 @@
                 ring: !!p.ring, bands: !!p.bands
             });
         }
+    }
+
+    /* ---------- туманности + кометы (глубина неба, обе темы) ---------- */
+
+    function buildNebula() {
+        var base = Math.max(W, H);
+        nebula = [
+            { x: W * 0.80, y: H * 0.24, R: base * 0.54, c: NEB1C, depth: 0.11 },
+            { x: W * 0.14, y: H * 0.68, R: base * 0.46, c: NEB2C, depth: 0.07 }
+        ];
+    }
+
+    function drawNebula() {
+        for (var i = 0; i < nebula.length; i++) {
+            var nb = nebula[i];
+            var x = nb.x + parX * nb.depth, y = nb.y + parY * nb.depth;
+            var g = ctx.createRadialGradient(x, y, 0, x, y, nb.R);
+            g.addColorStop(0, 'rgba(' + nb.c.r + ',' + nb.c.g + ',' + nb.c.b + ',' + nb.c.a + ')');
+            g.addColorStop(0.55, 'rgba(' + nb.c.r + ',' + nb.c.g + ',' + nb.c.b + ',' + (nb.c.a * 0.4).toFixed(3) + ')');
+            g.addColorStop(1, 'rgba(' + nb.c.r + ',' + nb.c.g + ',' + nb.c.b + ',0)');
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, W, H);
+        }
+    }
+
+    function spawnComet() {
+        var T = (performance.now() - bootAt) / 1000;
+        var fromLeft = Math.random() < 0.5;
+        var dir = fromLeft ? 1 : (Math.random() < 0.5 ? 1 : -1);
+        var ang = 0.42 + Math.random() * 0.42;        /* вниз, небольшой наклон */
+        var sp = 420 + Math.random() * 260;
+        comets.push({
+            x: fromLeft ? -20 : Math.random() * W,
+            y: Math.random() * H * 0.34,
+            vx: Math.cos(ang) * sp * dir,
+            vy: Math.sin(ang) * sp,
+            t0: T, life: 0.7 + Math.random() * 0.5,
+            len: 46 + Math.random() * 40
+        });
+    }
+
+    function drawComets(T) {
+        if (!comets.length) return;
+        ctx.lineCap = 'round';
+        for (var k = comets.length - 1; k >= 0; k--) {
+            var c = comets[k];
+            var age = T - c.t0;
+            if (age < 0) continue;
+            if (age > c.life) { comets.splice(k, 1); continue; }
+            var fade = 1 - age / c.life;
+            var hx = c.x + c.vx * age, hy = c.y + c.vy * age;
+            var nl = Math.hypot(c.vx, c.vy) || 1;
+            var tx = hx - (c.vx / nl) * c.len, ty = hy - (c.vy / nl) * c.len;
+            var base = 'rgba(' + COMETC.r + ',' + COMETC.g + ',' + COMETC.b + ',';
+            var grad = ctx.createLinearGradient(hx, hy, tx, ty);
+            grad.addColorStop(0, base + (0.9 * fade * COMETC.a).toFixed(3) + ')');
+            grad.addColorStop(0.45, base + (0.35 * fade * COMETC.a).toFixed(3) + ')');
+            grad.addColorStop(1, base + '0)');
+            ctx.globalAlpha = 1;
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = 1.6;
+            ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(hx, hy); ctx.stroke();
+            ctx.globalAlpha = fade * COMETC.a;
+            ctx.fillStyle = 'rgb(' + COMETC.r + ',' + COMETC.g + ',' + COMETC.b + ')';
+            ctx.beginPath(); ctx.arc(hx, hy, 1.4, 0, TAU); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+    }
+
+    /* ---------- орбитальный спутник вокруг фото-планеты (hero) ---------- */
+
+    function drawOrbit(T, bob) {
+        if (mode !== 'hero') return;
+        var cx = planetX + parX, cy = planetY + parY + bob;
+        var rSat = D / 2 + 44;
+        var a = T * SAT_SPIN;
+        /* тонкая орбитальная линия */
+        ctx.globalAlpha = 0.14;
+        ctx.strokeStyle = RING_COL;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(cx, cy, rSat, 0, TAU);
+        ctx.stroke();
+        /* спутник + короткий затухающий шлейф */
+        for (var t = 4; t >= 0; t--) {
+            var tt = a - t * 0.16;
+            var sx = cx + Math.cos(tt) * rSat, sy = cy + Math.sin(tt) * rSat;
+            ctx.globalAlpha = t === 0 ? 0.95 : Math.max(0, 0.5 - t * 0.1);
+            ctx.fillStyle = RING_COL;
+            ctx.beginPath();
+            ctx.arc(sx, sy, t === 0 ? 3 : (3 - t * 0.5), 0, TAU);
+            ctx.fill();
+        }
+        ctx.globalAlpha = 1;
     }
 
     /* ---------- burst / trail (указатель) ---------- */
@@ -391,6 +509,13 @@
         }
         /* планеты: медленный ход по кругу — позиция считается от T в drawSolar() */
 
+        /* редкие кометы: запуск раз в 4–14 c, одновременно ≤2 */
+        cometWait -= dt;
+        if (cometWait <= 0) {
+            spawnComet();
+            cometWait = 4 + Math.random() * 10;
+        }
+
         /* фото-планета: парение 7 c + параллакс (ring на канвасе движется тем же центром) */
         var bob = reduced ? 0 : Math.sin(T * TAU / 7) * 6;
         if (planetImg) {
@@ -399,10 +524,12 @@
         }
 
         ctx.clearRect(0, 0, W, H);
+        drawNebula();
         drawSolar(T);
         drawDome();
         drawStars(T);
-        if (mode === 'hero') drawPlanetBob(T, bob);
+        drawComets(T);
+        if (mode === 'hero') { drawPlanetBob(T, bob); drawOrbit(T, bob); }
         drawParts(T);
         drawTrail(T);
         setGlow();
@@ -467,6 +594,17 @@
             var x = s.cx + Math.cos(th) * s.R + parX * s.depth;
             var y = s.cy + Math.sin(th) * s.R + parY * s.depth * 0.6;
             var r = s.r;
+
+            /* атмосфера/ореол (Нептун, Уран) — мягкое свечение за телом */
+            if (s.halo) {
+                var hg = ctx.createRadialGradient(x, y, r * 0.5, x, y, r * 1.9);
+                hg.addColorStop(0, s.c1);
+                hg.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.globalAlpha = 0.5 * s.a;
+                ctx.fillStyle = hg;
+                ctx.beginPath(); ctx.arc(x, y, r * 1.9, 0, TAU); ctx.fill();
+                ctx.globalAlpha = s.a;
+            }
 
             /* тело */
             var g = ctx.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.15, x, y, r);
@@ -594,6 +732,7 @@
         if (planetImg) planetImg.style.transform = 'none';
         if (!W) return;
         ctx.clearRect(0, 0, W, H);
+        drawNebula();
         drawSolar(0);
         drawDome();
         drawStars(0);
@@ -613,6 +752,7 @@
                 ctx.fillText(ring2[i].g, cx + Math.cos(ring2[i].a) * r2, cy + Math.sin(ring2[i].a) * r2);
             }
             ctx.globalAlpha = 1;
+            drawOrbit(0, 0);
         }
         setGlow();
     }
@@ -717,6 +857,7 @@
                 stars: stars.length, dome: dome.length,
                 ring: ring.length, parts: parts.length,
                 trail: trail.length, solar: solars.length,
+                nebula: nebula.length, comets: comets.length,
                 reduced: reduced, dark: themeDark(),
                 planetX: planetX, planetY: planetY
             };

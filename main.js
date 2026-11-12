@@ -112,6 +112,59 @@
         items.forEach(function (el) { observer.observe(el); });
     }
 
+    /* Премиум-дополнения:
+       1) Орбитальная полоса прокрутки сверху (scaleX = % прокрутки).
+       2) Кнопка «наверх» — появляется после ~420px, плавный скролл.
+       3) Живой счётчик до события в карточке next-up (data-countdown-to).
+       Работают на всех страницах; счётчик — только там, где есть [data-countdown-to]. */
+    (function () {
+        var docEl = document.documentElement;
+        var bar = document.getElementById('scroll-progress');
+        var toTop = document.getElementById('back-to-top');
+
+        function onScroll() {
+            var max = docEl.scrollHeight - window.innerHeight;
+            var p = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+            if (bar) bar.style.transform = 'scaleX(' + p.toFixed(4) + ')';
+            if (toTop) toTop.classList.toggle('show', window.scrollY > 420);
+        }
+
+        if (bar) {
+            bar.style.transform = 'scaleX(0)';
+            window.addEventListener('scroll', onScroll, { passive: true });
+            window.addEventListener('resize', onScroll, { passive: true });
+            onScroll();
+        }
+        if (toTop) {
+            toTop.addEventListener('click', function () {
+                window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+            });
+        }
+
+        var cd = document.querySelector('[data-countdown-to]');
+        if (cd) {
+            var attr = cd.getAttribute('data-countdown-to');
+            var target = new Date(attr.indexOf('T') === -1 ? attr + 'T00:00:00' : attr);
+            if (isNaN(target.getTime())) { cd.style.display = 'none'; return; }
+            var tick = function () {
+                var diff = target.getTime() - Date.now();
+                if (diff <= 0) {
+                    cd.textContent = 'событие началось';
+                    return;
+                }
+                var s = Math.floor(diff / 1000);
+                var d = Math.floor(s / 86400); s -= d * 86400;
+                var h = Math.floor(s / 3600); s -= h * 3600;
+                var m = Math.floor(s / 60); s -= m * 60;
+                cd.textContent = d > 0
+                    ? d + 'д ' + h + 'ч ' + m + 'м'
+                    : h + 'ч ' + m + 'м ' + s + 'с';
+            };
+            tick();
+            setInterval(tick, 1000);
+        }
+    })();
+
     /* Переключатель темы (правый нижний угол, fixed — остаётся при прокрутке).
        Тема сохраняется в localStorage['cpm-theme']; при переключении
        шлётся cpm-themechange (sky.js / symbols.js перестраиваются). */
