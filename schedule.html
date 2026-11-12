@@ -8,6 +8,8 @@
         (function () {
             var t = 'dark';
             try { t = localStorage.getItem('cpm-theme') || 'dark'; } catch (e) {}
+            var q = new URLSearchParams(location.search).get('theme');
+            if (q === 'light' || q === 'dark') t = q;
             document.documentElement.setAttribute('data-theme', t);
         })();
     </script>

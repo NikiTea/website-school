@@ -111,6 +111,7 @@
     /* ---------- layout / resize ---------- */
 
     function layout() {
+        loadPalette();   /* --sky-star/--sky-ring/--sky-dome текущей темы */
         var r;
         if (mode === 'hero') {
             r = hero.getBoundingClientRect();
@@ -226,6 +227,9 @@
     function buildDome() {
         dome = [];
         if (mode !== 'hero' || W < 820) { domeAcc = 0; return; }
+        /* та же «языко» символов, что у кольца вокруг фото (TRAIL), — как продолжение
+           вниз. Каждый глиф у ячейки свой; b — полоса прозрачности (ближе к «горизонту» сильнее). */
+        var rnd = mulberry32(555);
         for (var rr = 1; rr <= DROWS; rr++) {
             var y = H - rr * DCELL + DCELL / 2;
             var halfW = Math.sqrt(DRAD * DRAD - Math.pow((rr - 0.5) * DCELL, 2));
@@ -235,7 +239,7 @@
                 if ((c + rr) % 4 !== 0) continue;
                 var x = c * DCELL + DCELL / 2;
                 if (inKnock(x, y)) continue;
-                dome.push({ x: x, y: y, b: bandOf(rr) });
+                dome.push({ x: x, y: y, b: bandOf(rr), g: (rnd() * TRAIL.length) | 0 });
             }
         }
         domeAcc = 0;
@@ -269,30 +273,35 @@
     function buildSolar() {
         solars = [];
         var rnd = mulberry32(777);
-        var n = W >= 1024 ? (mode === 'hero' ? 4 : 5) : (W >= 640 ? 3 : 2);
+        /* больше планет → «все» планеты системы кружат одновременно */
+        var n = W >= 1024 ? (mode === 'hero' ? 5 : 6) : (W >= 640 ? 4 : 3);
         var scale = W >= 1024 ? 1 : (W >= 640 ? 0.78 : 0.58);
         var pool = SOLAR.slice();
+        var picks = [];
         for (var k = 0; k < n && pool.length; k++) {
             var s = pool[(rnd() * pool.length) | 0];
             pool.splice(pool.indexOf(s), 1);
-            var r = s.r * scale;
-            var x, y, tries = 0;
-            do {
-                x = 30 + rnd() * (W - 60);
-                y = mode === 'hero'
-                    ? 40 + rnd() * Math.max(60, D * 0.85)          /* верхняя полоса hero */
-                    : H * 0.06 + rnd() * H * 0.5;                  /* верх ~60% экрана */
-                tries++;
-            } while (mode === 'hero' && tries < 12 &&
-                     Math.abs(x - planetX) < D / 2 + r + 46 &&
-                     Math.abs(y - planetY) < D / 2 + r + 46);      /* не задвигаться на фото */
+            picks.push(s);
+        }
+        /* центр орбит: hero — фото-планета («Солнце» сцены), bg — точка вверху */
+        var cx = mode === 'hero' ? planetX : W * 0.5;
+        var cy = mode === 'hero' ? planetY : Math.max(120, H * 0.30);
+        /* орбиты расходятся от центра: f=0 — ближе, f=1 — дальше */
+        var rMin = mode === 'hero' ? D / 2 + 40 * scale + 10 : 60;
+        var rMax = mode === 'hero'
+            ? D / 2 + 40 * scale + 10 + 130 * scale
+            : Math.min(W, H) * 0.42;
+        for (var i = 0; i < picks.length; i++) {
+            var p = picks[i];
+            var f = picks.length > 1 ? i / (picks.length - 1) : 0.5;
+            var R = rMin + (rMax - rMin) * f + (rnd() * 2 - 1) * 12;
+            var period = 90 + 150 * f + rnd() * 50;   /* сек/оборот: дальше — медленнее */
             solars.push({
-                key: s.key, x: x, y: y, r: r,
-                c1: s.c1, c2: s.c2, a: s.a,
-                v: s.v * scale * (0.7 + rnd() * 0.6) * (rnd() < 0.5 ? -1 : 1),
-                ph: rnd() * TAU,
+                key: p.key, cx: cx, cy: cy, R: R,
+                w: TAU / period, th0: rnd() * TAU,
+                r: p.r * scale, c1: p.c1, c2: p.c2, a: p.a,
                 depth: 0.25 + rnd() * 0.5,   /* параллакс: близкие глубже двигаются */
-                ring: !!s.ring, bands: !!s.bands
+                ring: !!p.ring, bands: !!p.bands
             });
         }
     }
@@ -377,18 +386,10 @@
             domeAcc += dt * dome.length * 0.03;
             while (domeAcc >= 1) {
                 domeAcc -= 1;
-                dome[(Math.random() * dome.length) | 0].b = (Math.random() * 3) | 0;
+                dome[(Math.random() * dome.length) | 0].g = (Math.random() * TRAIL.length) | 0;
             }
         }
-        /* планеты: очень медленный дрейф + заворот за край */
-        if (solars.length && !reduced) {
-            for (var sp = 0; sp < solars.length; sp++) {
-                var so = solars[sp];
-                so.x += so.v * dt;
-                if (so.x < -50) so.x = W + 50;
-                if (so.x > W + 50) so.x = -50;
-            }
-        }
+        /* планеты: медленный ход по кругу — позиция считается от T в drawSolar() */
 
         /* фото-планета: парение 7 c + параллакс (ring на канвасе движется тем же центром) */
         var bob = reduced ? 0 : Math.sin(T * TAU / 7) * 6;
@@ -412,7 +413,7 @@
         var cx = planetX + parX, cy = planetY + parY + bob;
         var r1 = D / 2 + 12, r2 = D / 2 + 28;
         var spin = T * RING_SPIN;
-        ctx.font = '400 ' + Math.max(8, D * 0.035).toFixed(1) + 'px ' + MONO;
+        ctx.font = '400 ' + Math.max(9, D * 0.04).toFixed(1) + 'px ' + SGA;
         ctx.fillStyle = RING_COL;
         for (var i = 0; i < ring.length; i++) {
             var p = ring[i];
@@ -445,16 +446,13 @@
 
     function drawDome() {
         if (!dome.length) return;
-        ctx.font = '400 22px ' + MONO;
+        ctx.font = '400 22px ' + SGA;
         ctx.fillStyle = DOME_COL;
         var off = -parX * 0.4;                            /* контр-параллакс: дальний слой */
-        for (var b = 0; b < 3; b++) {
-            ctx.globalAlpha = BANDS[b].a;
-            for (var k = 0; k < dome.length; k++) {
-                var dc = dome[k];
-                if (dc.b !== b) continue;
-                ctx.fillText(BANDS[b].g, dc.x + off, dc.y);
-            }
+        for (var k = 0; k < dome.length; k++) {
+            var dc = dome[k];
+            ctx.globalAlpha = BANDS[dc.b].a;
+            ctx.fillText(TRAIL[dc.g], dc.x + off, dc.y);
         }
         ctx.globalAlpha = 1;
     }
@@ -465,8 +463,9 @@
         if (!solars.length) return;
         for (var i = 0; i < solars.length; i++) {
             var s = solars[i];
-            var x = s.x + parX * s.depth;
-            var y = s.y + parY * s.depth * 0.6 + (reduced ? 0 : Math.sin(T * 0.4 + s.ph) * 3);
+            var th = s.th0 + s.w * T;
+            var x = s.cx + Math.cos(th) * s.R + parX * s.depth;
+            var y = s.cy + Math.sin(th) * s.R + parY * s.depth * 0.6;
             var r = s.r;
 
             /* тело */
@@ -578,7 +577,7 @@
     }
 
     function start() {
-        if (raf || reduced || !themeDark()) return;
+        if (raf || reduced) return;
         if (!bootAt) bootAt = performance.now();
         lastNow = 0;
         lastDraw = 0;
@@ -602,7 +601,7 @@
             /* статичное кольцо (T=0) */
             var cx = planetX, cy = planetY;
             var r1 = D / 2 + 12, r2 = D / 2 + 28;
-            ctx.font = '400 ' + Math.max(8, D * 0.035).toFixed(1) + 'px ' + MONO;
+            ctx.font = '400 ' + Math.max(9, D * 0.04).toFixed(1) + 'px ' + SGA;
             ctx.fillStyle = RING_COL;
             var i;
             for (i = 0; i < ring.length; i++) {
@@ -619,7 +618,8 @@
     }
 
     function sync() {
-        if (!themeDark()) { stop(); clearCanvas(); return; }
+        /* сцена (звёзды/купол/кольцо/планеты) работает в обеих темах —
+           палитра берётся из --sky-*; burst/trail в светлой делает symbols.js */
         if (reduced) { stop(); staticFrame(); }
         else start();
     }
@@ -629,13 +629,13 @@
     if (mode === 'hero' && 'IntersectionObserver' in window) {
         new IntersectionObserver(function (es) {
             heroVisible = !!es.length && es[0].isIntersecting;
-            if (!themeDark() || reduced) return;
+            if (reduced) return;
             if (heroVisible && tabVisible) start(); else stop();
         }, { rootMargin: '0px 0px -10% 0px' }).observe(hero);
     }
     document.addEventListener('visibilitychange', function () {
         tabVisible = !document.hidden;
-        if (!themeDark() || reduced) return;
+        if (reduced) return;
         if (tabVisible) start(); else stop();
     });
     if (mqReduce.addEventListener) {
@@ -654,13 +654,15 @@
     /* ---------- указатель ---------- */
 
     addEventListener('pointermove', function (e) {
-        if (reduced || !themeDark()) return;
+        if (reduced) return;
+        /* параллакс работает в обеих темах; шлейф глифов — только в тёмной
+           (в светлой burst/trail рисует symbols.js) */
         var mx = mode === 'hero' ? e.clientX - heroLeft : e.clientX;
         var my = mode === 'hero' ? e.clientY - heroTop : e.clientY;
         if (mx < 0 || my < 0 || mx > W || my > H) { parTX = 0; parTY = 0; return; }
         parTX = (mx / W - 0.5) * 28;
         parTY = (my / H - 0.5) * 20;
-        if (holding) {
+        if (themeDark() && holding) {
             var hr = mode === 'hero' ? hero.getBoundingClientRect() : null;
             emitTrail(e.clientX - (hr ? hr.left : 0), e.clientY - (hr ? hr.top : 0));
         }
@@ -697,9 +699,13 @@
 
     layout();
 
-    if (document.fonts && document.fonts.ready) {
-        document.fonts.ready.then(function () {
-            if (reduced && themeDark()) staticFrame();
+    /* рукописный SGA Smooth для кольца вокруг фото и купольной сетки снизу:
+       до загрузки глифы рисуются fallback-шрифтом, после — SGA. В режиме без
+       анимации перерисовываем статичный кадр сразу, как только шрифт готов. */
+    if (document.fonts) {
+        if (document.fonts.load) document.fonts.load('400 24px "SGA Smooth"');
+        if (document.fonts.ready) document.fonts.ready.then(function () {
+            if (reduced) staticFrame();
         });
     }
 
