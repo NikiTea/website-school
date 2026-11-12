@@ -9,6 +9,7 @@
 /functions
 node_modules
 .git
+.claude
 .DS_Store
 .npmrc
 .reanimate
