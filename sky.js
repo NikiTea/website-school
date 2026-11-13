@@ -334,19 +334,27 @@
 
     function buildNebula() {
         var base = Math.max(W, H);
+        /* ph — фаза дыхания/дрейфа; dr — амплитуда дрейфа, px; br — амплитуда «дыхания» */
         nebula = [
-            { x: W * 0.80, y: H * 0.24, R: base * 0.54, c: NEB1C, depth: 0.11 },
-            { x: W * 0.14, y: H * 0.68, R: base * 0.46, c: NEB2C, depth: 0.07 }
+            { x: W * 0.80, y: H * 0.24, R: base * 0.54, c: NEB1C, depth: 0.11, ph: 0.0, dr: 26, br: 0.12 },
+            { x: W * 0.14, y: H * 0.68, R: base * 0.46, c: NEB2C, depth: 0.07, ph: 2.1, dr: 20, br: 0.16 }
         ];
     }
 
-    function drawNebula() {
+    function drawNebula(T) {
+        T = T || 0;
         for (var i = 0; i < nebula.length; i++) {
             var nb = nebula[i];
-            var x = nb.x + parX * nb.depth, y = nb.y + parY * nb.depth;
-            var g = ctx.createRadialGradient(x, y, 0, x, y, nb.R);
-            g.addColorStop(0, 'rgba(' + nb.c.r + ',' + nb.c.g + ',' + nb.c.b + ',' + nb.c.a + ')');
-            g.addColorStop(0.55, 'rgba(' + nb.c.r + ',' + nb.c.g + ',' + nb.c.b + ',' + (nb.c.a * 0.4).toFixed(3) + ')');
+            /* медленный дрейф + дыхание: небула живёт, а не висит статично */
+            var ox = nb.dr * Math.sin(T * 0.10 + nb.ph);
+            var oy = nb.dr * 0.6 * Math.cos(T * 0.08 + nb.ph);
+            var breathe = 1 + nb.br * Math.sin(T * 0.13 + nb.ph);
+            var a0 = nb.c.a * breathe;
+            var x = nb.x + parX * nb.depth + ox, y = nb.y + parY * nb.depth + oy;
+            var R = nb.R * (1 + 0.06 * Math.sin(T * 0.11 + nb.ph));
+            var g = ctx.createRadialGradient(x, y, 0, x, y, R);
+            g.addColorStop(0, 'rgba(' + nb.c.r + ',' + nb.c.g + ',' + nb.c.b + ',' + a0.toFixed(3) + ')');
+            g.addColorStop(0.55, 'rgba(' + nb.c.r + ',' + nb.c.g + ',' + nb.c.b + ',' + (a0 * 0.4).toFixed(3) + ')');
             g.addColorStop(1, 'rgba(' + nb.c.r + ',' + nb.c.g + ',' + nb.c.b + ',0)');
             ctx.fillStyle = g;
             ctx.fillRect(0, 0, W, H);
@@ -359,13 +367,15 @@
         var dir = fromLeft ? 1 : (Math.random() < 0.5 ? 1 : -1);
         var ang = 0.42 + Math.random() * 0.42;        /* вниз, небольшой наклон */
         var sp = 420 + Math.random() * 260;
+        var big = Math.random() < 0.18;                /* изредка — яркая крупная комета */
         comets.push({
             x: fromLeft ? -20 : Math.random() * W,
             y: Math.random() * H * 0.34,
             vx: Math.cos(ang) * sp * dir,
             vy: Math.sin(ang) * sp,
-            t0: T, life: 0.7 + Math.random() * 0.5,
-            len: 46 + Math.random() * 40
+            t0: T, life: (big ? 1.1 : 0.7) + Math.random() * 0.5,
+            len: (big ? 90 : 46) + Math.random() * 40,
+            big: big
         });
     }
 
@@ -388,11 +398,19 @@
             grad.addColorStop(1, base + '0)');
             ctx.globalAlpha = 1;
             ctx.strokeStyle = grad;
-            ctx.lineWidth = 1.6;
+            ctx.lineWidth = c.big ? 2.4 : 1.6;
             ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(hx, hy); ctx.stroke();
+            /* у крупной кометы — мягкое свечение в голове */
+            if (c.big) {
+                var hg = ctx.createRadialGradient(hx, hy, 0, hx, hy, 9);
+                hg.addColorStop(0, base + (0.8 * fade * COMETC.a).toFixed(3) + ')');
+                hg.addColorStop(1, base + '0)');
+                ctx.fillStyle = hg;
+                ctx.beginPath(); ctx.arc(hx, hy, 9, 0, TAU); ctx.fill();
+            }
             ctx.globalAlpha = fade * COMETC.a;
             ctx.fillStyle = 'rgb(' + COMETC.r + ',' + COMETC.g + ',' + COMETC.b + ')';
-            ctx.beginPath(); ctx.arc(hx, hy, 1.4, 0, TAU); ctx.fill();
+            ctx.beginPath(); ctx.arc(hx, hy, c.big ? 2 : 1.4, 0, TAU); ctx.fill();
         }
         ctx.globalAlpha = 1;
     }
@@ -411,16 +429,25 @@
         ctx.beginPath();
         ctx.arc(cx, cy, rSat, 0, TAU);
         ctx.stroke();
-        /* спутник + короткий затухающий шлейф */
-        for (var t = 4; t >= 0; t--) {
-            var tt = a - t * 0.16;
-            var sx = cx + Math.cos(tt) * rSat, sy = cy + Math.sin(tt) * rSat;
-            ctx.globalAlpha = t === 0 ? 0.95 : Math.max(0, 0.5 - t * 0.1);
+        /* длинный затухающий светящийся шлейф-дуга (14 точек) */
+        var N = 14, t, tt, sx, sy, f;
+        for (t = N - 1; t >= 1; t--) {
+            tt = a - t * 0.055;
+            sx = cx + Math.cos(tt) * rSat; sy = cy + Math.sin(tt) * rSat;
+            f = 1 - t / N;
+            ctx.globalAlpha = f * 0.40;
             ctx.fillStyle = RING_COL;
             ctx.beginPath();
-            ctx.arc(sx, sy, t === 0 ? 3 : (3 - t * 0.5), 0, TAU);
+            ctx.arc(sx, sy, 2.2 * f + 0.6, 0, TAU);
             ctx.fill();
         }
+        /* головное свечение: мягкий ореол + яркий центр */
+        var hx = cx + Math.cos(a) * rSat, hy = cy + Math.sin(a) * rSat;
+        ctx.globalAlpha = 0.28;
+        ctx.fillStyle = RING_COL;
+        ctx.beginPath(); ctx.arc(hx, hy, 8, 0, TAU); ctx.fill();
+        ctx.globalAlpha = 0.95;
+        ctx.beginPath(); ctx.arc(hx, hy, 3, 0, TAU); ctx.fill();
         ctx.globalAlpha = 1;
     }
 
@@ -524,7 +551,7 @@
         }
 
         ctx.clearRect(0, 0, W, H);
-        drawNebula();
+        drawNebula(T);
         drawSolar(T);
         drawDome();
         drawStars(T);
@@ -720,6 +747,30 @@
         lastNow = 0;
         lastDraw = 0;
         raf = requestAnimationFrame(frame);
+        paintOnce();   /* мгновенный кадр в текущей теме, не дожидаясь rAF */
+    }
+
+    /* Синхронная перерисовка одного кадра текущей темой. На части устройств
+       rAF дёргается/троттлится: после cpm-themechange канвас мог ещё держать
+       тёмный кадр, пока не наступил следующий rAF. paintOnce() гасит этот
+       проскок — кадр перерисовывается сразу, в новой палитре. */
+    function paintOnce() {
+        if (reduced || !W) return;
+        var T = bootAt ? (performance.now() - bootAt) / 1000 : 0;
+        var bob = Math.sin(T * TAU / 7) * 6;
+        ctx.clearRect(0, 0, W, H);
+        drawNebula(T);
+        drawSolar(T);
+        drawDome();
+        drawStars(T);
+        drawComets(T);
+        if (mode === 'hero') {
+            if (planetImg) planetImg.style.transform =
+                'translate3d(' + parX.toFixed(2) + 'px,' + (parY + bob).toFixed(2) + 'px,0)';
+            drawPlanetBob(T, bob);
+            drawOrbit(T, bob);
+        }
+        setGlow();
     }
 
     function stop() {
@@ -732,7 +783,7 @@
         if (planetImg) planetImg.style.transform = 'none';
         if (!W) return;
         ctx.clearRect(0, 0, W, H);
-        drawNebula();
+        drawNebula(0);
         drawSolar(0);
         drawDome();
         drawStars(0);
@@ -785,7 +836,7 @@
         });
     }
     /* смена темы: событие от main.js + MutationObserver-страховка */
-    function onTheme() { layout(); sync(); }
+    function onTheme() { layout(); paintOnce(); sync(); }
     window.addEventListener('cpm-themechange', onTheme);
     if ('MutationObserver' in window) {
         new MutationObserver(onTheme).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
@@ -794,9 +845,10 @@
     /* ---------- указатель ---------- */
 
     addEventListener('pointermove', function (e) {
-        if (reduced) return;
+        if (reduced || (e.pointerType || 'mouse') === 'touch') return;
         /* параллакс работает в обеих темах; шлейф глифов — только в тёмной
-           (в светлой burst/trail рисует symbols.js) */
+           (в светлой burst/trail рисует symbols.js). Тач-устройства пропускаем:
+           на телефоне свайп не должен раскидывать глифы и дёргать параллакс. */
         var mx = mode === 'hero' ? e.clientX - heroLeft : e.clientX;
         var my = mode === 'hero' ? e.clientY - heroTop : e.clientY;
         if (mx < 0 || my < 0 || mx > W || my > H) { parTX = 0; parTY = 0; return; }
@@ -809,7 +861,8 @@
     }, { passive: true });
 
     addEventListener('pointerdown', function (e) {
-        if (reduced || !themeDark()) return;
+        if (reduced || !themeDark() || (e.pointerType || 'mouse') === 'touch') return;
+        /* тач-тап не спавнит глифы — только мышь/стилус */
         if (e.target.closest && e.target.closest(GUARD)) return;
         var hr = mode === 'hero' ? hero.getBoundingClientRect() : null;
         var mx = e.clientX - (hr ? hr.left : 0);

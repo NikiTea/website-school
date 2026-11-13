@@ -132,7 +132,8 @@
     }
 
     addEventListener('pointerdown', function (e) {
-        if (!isLight() || mqReduce.matches) return;
+        if (!isLight() || mqReduce.matches || (e.pointerType || 'mouse') === 'touch') return;
+        /* тач-тап не спавнит глифы — только мышь/стилус */
         if (e.target.closest && e.target.closest(GUARD)) return;
         holding = true;
         burst(e.clientX, e.clientY);
@@ -140,7 +141,8 @@
 
     /* «шлейф» при удержании: каждый pointermove эммитит 1–2 слабых глифа */
     addEventListener('pointermove', function (e) {
-        if (holding && isLight() && !mqReduce.matches) emitTrail(e.clientX, e.clientY);
+        if (holding && isLight() && !mqReduce.matches && (e.pointerType || 'mouse') !== 'touch')
+            emitTrail(e.clientX, e.clientY);
     }, { passive: true });
 
     /* конец удержания: pointerup / pointercancel / выход указателя за
