@@ -13,3 +13,8 @@ node_modules
 .DS_Store
 .npmrc
 .reanimate
+
+# service dirs (CLI deploy respects .assetsignore)
+.playwright-mcp
+.simplicio-loop
+.cfignore

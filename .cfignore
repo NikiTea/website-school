@@ -1,0 +1,21 @@
+# Исключения для CLI-загрузки (npx wrangler pages deploy .).
+# ВНИМАНИЕ: .cfignore читает только CLI wrangler; .assetsignore — только
+# CF-dashboard builds. Поэтому список продублирован в обоих файлах.
+.git
+.claude
+.playwright-mcp
+.simplicio-loop
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
+/assets/functions
+/_worker.js
+/_routes.json
+node_modules
+.DS_Store
+.npmrc
+.reanimate
+.cfignore
+.assetsignore
