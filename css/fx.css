@@ -1,0 +1,301 @@
+/* ========== FX-плейграунд (play.html) ==========
+   Только эта страница: фон всегда тёмный, полноэкранный canvas под всем. */
+
+body.fx-page {
+    background: #05070d;
+}
+
+#fx-bg {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.fx-fallback {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    display: grid;
+    place-items: center;
+    background: radial-gradient(60% 60% at 50% 40%, #101a2c 0%, #05070d 100%);
+}
+.fx-fallback p {
+    color: var(--secondary);
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    padding: 0 24px;
+    text-align: center;
+}
+/* display:grid выше перебивает [hidden] из UA-стилей — глушим явно */
+.fx-fallback[hidden] { display: none; }
+
+.fx-main {
+    position: relative;
+    z-index: 1;
+    min-height: calc(100vh - var(--header-h));
+}
+
+/* ---------- Шапка: название фона ---------- */
+
+.fx-hero {
+    min-height: 44vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 48px 0 28px;
+}
+
+.fx-kicker {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+}
+
+.fx-title {
+    font-family: var(--display);
+    font-weight: 500;
+    font-size: clamp(1.9rem, 5.5vw, 3.8rem);
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+}
+
+.fx-title .fx-title-em {
+    display: inline-block;
+    min-width: 10ch;
+    background: linear-gradient(90deg, #7df9c9 0%, #4d9dff 55%, #c07dff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.fx-sub {
+    margin-top: 14px;
+    max-width: 46ch;
+    color: var(--secondary);
+}
+.fx-sub kbd {
+    font-family: var(--mono);
+    font-size: 0.82em;
+    background: var(--raised);
+    border: 1px solid var(--hairline-strong);
+    border-radius: 6px;
+    padding: 1px 7px;
+}
+
+/* ---------- Карточки шейдеров ---------- */
+
+.fx-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 16px;
+    padding-bottom: 56px;
+}
+
+.fx-card {
+    position: relative;
+    padding: 20px 20px 22px;
+    border-radius: var(--r-md);
+    background: var(--glass);
+    border: 1px solid var(--glass-edge);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    box-shadow: var(--card-shadow);
+    cursor: pointer;
+    transform-style: preserve-3d;
+    transition:
+        transform 0.35s var(--ease),
+        border-color 0.25s var(--ease),
+        box-shadow 0.35s var(--ease);
+}
+.fx-card:hover {
+    border-color: var(--glass-edge-hover);
+    box-shadow: var(--card-lift);
+}
+.fx-card:active { transition-duration: 0.05s; }
+
+.fx-card.is-active {
+    border-color: var(--glass-glow);
+    box-shadow:
+        var(--card-lift),
+        inset 0 0 0 1px var(--glass-glow);
+}
+
+.fx-card-num {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.14em;
+}
+
+.fx-card h3 {
+    font-family: var(--display);
+    font-weight: 500;
+    font-size: 1.12rem;
+    margin: 10px 0 6px;
+}
+
+.fx-card p {
+    color: var(--secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.fx-card-state {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--cd-text);
+    background: var(--cd-bg);
+    border: 1px solid var(--cd-edge);
+    border-radius: 999px;
+    padding: 3px 10px;
+    opacity: 0;
+    transition: opacity 0.25s var(--ease);
+}
+.fx-card.is-active .fx-card-state { opacity: 1; }
+
+/* ---------- Бегущая строка ---------- */
+
+.fx-marquee {
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    border-top: 1px solid var(--hairline);
+    padding: 14px 0;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+
+.fx-marquee-track {
+    display: flex;
+    gap: 0;
+    width: max-content;
+    animation: fx-marquee 30s linear infinite;
+}
+
+.fx-marquee-track span {
+    display: block;
+    white-space: nowrap;
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-right: 48px;
+}
+
+@keyframes fx-marquee {
+    to { transform: translateX(-50%); }
+}
+
+@media (max-width: 560px) {
+    .fx-hero { padding-top: 28px; min-height: 34vh; }
+    .fx-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .fx-card { padding: 16px 14px 18px; }
+    .fx-card p { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fx-marquee-track { animation: none; }
+}
+
+/* ---------- Горизонтальная галерея (sticky-скролл, demo #9) ---------- */
+
+.fx-hscroll {
+    height: 260vh;
+    overflow-x: clip;
+}
+
+.fx-hs-sticky {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 28px;
+}
+
+.fx-hs-kicker {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 10px;
+}
+
+.fx-hs-title {
+    font-family: var(--display);
+    font-weight: 500;
+    font-size: clamp(1.4rem, 3vw, 2.2rem);
+    margin: 0 0 8px;
+}
+
+.fx-hs-hint {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin: 0;
+}
+
+.fx-hs-strip {
+    display: flex;
+    gap: 20px;
+    width: max-content;
+    padding: 8px 4vw;
+    will-change: transform;
+}
+
+.fx-hs-tile {
+    position: relative;
+    flex: 0 0 auto;
+    width: min(340px, 64vw);
+    aspect-ratio: 16 / 10;
+    border-radius: var(--r-md);
+    overflow: hidden;
+    border: 1px solid var(--glass-edge);
+    box-shadow: var(--card-shadow);
+}
+
+.fx-hs-tile:nth-child(1) { background-image: repeating-linear-gradient(115deg, rgba(255,255,255,0.035) 0 2px, transparent 2px 7px), linear-gradient(135deg, #0b1e3a 0%, #123a6b 45%, #2b6fb3 100%); }
+.fx-hs-tile:nth-child(2) { background-image: repeating-linear-gradient(115deg, rgba(255,255,255,0.035) 0 2px, transparent 2px 7px), linear-gradient(135deg, #1a0b2e 0%, #3c1663 55%, #7a3bd6 100%); }
+.fx-hs-tile:nth-child(3) { background-image: repeating-linear-gradient(115deg, rgba(255,255,255,0.035) 0 2px, transparent 2px 7px), linear-gradient(135deg, #04211d 0%, #0c4f3f 55%, #2fae7f 100%); }
+.fx-hs-tile:nth-child(4) { background-image: repeating-linear-gradient(115deg, rgba(255,255,255,0.035) 0 2px, transparent 2px 7px), linear-gradient(135deg, #101426 0%, #232a54 55%, #4d5fb3 100%); }
+.fx-hs-tile:nth-child(5) { background-image: repeating-linear-gradient(115deg, rgba(255,255,255,0.035) 0 2px, transparent 2px 7px), linear-gradient(135deg, #2e0f24 0%, #5a1e47 55%, #a03c7e 100%); }
+.fx-hs-tile:nth-child(6) { background-image: repeating-linear-gradient(115deg, rgba(255,255,255,0.035) 0 2px, transparent 2px 7px), linear-gradient(135deg, #0d1420 0%, #1f3a4f 55%, #3e6f8e 100%); }
+.fx-hs-tile:nth-child(7) { background-image: repeating-linear-gradient(115deg, rgba(255,255,255,0.035) 0 2px, transparent 2px 7px), linear-gradient(135deg, #241a06 0%, #5a4210 55%, #9e7a1f 100%); }
+.fx-hs-tile:nth-child(8) { background-image: repeating-linear-gradient(115deg, rgba(255,255,255,0.035) 0 2px, transparent 2px 7px), linear-gradient(135deg, #0a1020 0%, #16264d 55%, #2e4a8e 100%); }
+
+.fx-hs-cap {
+    position: absolute;
+    left: 14px;
+    bottom: 12px;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    color: #e8ecf7;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fx-hscroll { height: auto; overflow-x: visible; }
+    .fx-hs-sticky { position: static; height: auto; overflow-x: auto; }
+    .fx-hs-strip { will-change: auto; }
+}
+
+@media (max-width: 640px) {
+    .fx-hs-tile { width: min(240px, 72vw); }
+    .fx-hs-strip { gap: 12px; }
+}

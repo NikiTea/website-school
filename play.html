@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Школа ЦПМ — FX-плейграунд</title>
+    <script>document.documentElement.setAttribute('data-theme', 'dark');</script>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/fx.css">
+</head>
+<body class="fx-page">
+    <canvas id="fx-bg" aria-hidden="true"></canvas>
+    <div id="fx-fallback" class="fx-fallback" hidden>
+        <p>WebGL недоступен в этом браузере —<br>фон выключен, но страница работает как обычно</p>
+    </div>
+
+    <header>
+        <div class="header-inner">
+            <div class="brand">
+                <span class="logo" aria-hidden="true">8И</span>
+                <h1>Школа ЦПМ</h1>
+            </div>
+            <button class="burger" type="button" aria-label="Открыть меню" aria-expanded="false" aria-controls="site-nav">
+                <span></span><span></span><span></span>
+            </button>
+            <nav id="site-nav" aria-label="Основная навигация">
+                <ul>
+                    <li><a href="index.html">Главная</a></li>
+                    <li><a href="about.html">О классе</a></li>
+                    <li><a href="schedule.html">Расписание</a></li>
+                    <li><a href="gallery.html">Галерея</a></li>
+                    <li><a href="contacts.html">Контакты</a></li>
+                    <li><a href="play.html" class="active">FX</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="fx-main">
+        <div class="container">
+            <section class="fx-hero">
+                <p class="fx-kicker">8И · экспериментальная площадка</p>
+                <h2 class="fx-title" data-reveal>Фон: <span id="fx-name" class="fx-title-em">Сияние</span></h2>
+                <p class="fx-sub" data-reveal data-stagger="1">
+                    Кликните по карточке или нажмите клавиши <kbd>1</kbd>–<kbd>9</kbd>.
+                    Двигайте курсором — часть эффектов его замечает.
+                </p>
+            </section>
+
+            <section class="fx-grid" aria-label="Выбор шейдерного фона">
+                <article class="fx-card is-active" data-fx="aurora" tabindex="0" role="button" aria-pressed="true" data-reveal data-stagger="0">
+                    <span class="fx-card-num">01</span>
+                    <span class="fx-card-state">активен</span>
+                    <h3>Сияние</h3>
+                    <p>Зелёно-фиолетовые завесы струятся над звёздным небом</p>
+                </article>
+                <article class="fx-card" data-fx="matrix" tabindex="0" role="button" aria-pressed="false" data-reveal data-stagger="1">
+                    <span class="fx-card-num">02</span>
+                    <span class="fx-card-state">активен</span>
+                    <h3>Матрица</h3>
+                    <p>Зелёные символы падают колоннами, свет тянется к курсору</p>
+                </article>
+                <article class="fx-card" data-fx="nebula" tabindex="0" role="button" aria-pressed="false" data-reveal data-stagger="2">
+                    <span class="fx-card-num">03</span>
+                    <span class="fx-card-state">активен</span>
+                    <h3>Туманность</h3>
+                    <p>Медленно текущие цветовые поля — розовое и бирюзовое</p>
+                </article>
+                <article class="fx-card" data-fx="stars" tabindex="0" role="button" aria-pressed="false" data-reveal data-stagger="3">
+                    <span class="fx-card-num">04</span>
+                    <span class="fx-card-state">активен</span>
+                    <h3>Звёздное поле</h3>
+                    <p>Дрейфующие звёзды с мерцанием и лёгким параллаксом от курсора</p>
+                </article>
+                <article class="fx-card" data-fx="vortex" tabindex="0" role="button" aria-pressed="false" data-reveal data-stagger="4">
+                    <span class="fx-card-num">05</span>
+                    <span class="fx-card-state">активен</span>
+                    <h3>Гравитация</h3>
+                    <p>Пространство изгибается вокруг точки под курсором</p>
+                </article>
+                <article class="fx-card" data-fx="goo" tabindex="0" role="button" aria-pressed="false" data-reveal data-stagger="5">
+                    <span class="fx-card-num">06</span>
+                    <span class="fx-card-state">активен</span>
+                    <h3>Капли</h3>
+                    <p>Метаболлы: плавающие капли слипаются и разбегаются</p>
+                </article>
+                <article class="fx-card" data-fx="synthwave" tabindex="0" role="button" aria-pressed="false" data-reveal data-stagger="6">
+                    <span class="fx-card-num">07</span>
+                    <span class="fx-card-state">активен</span>
+                    <h3>Синтвейв</h3>
+                    <p>Ретро-солнце и неоновая сетка, плывущая к зрителю</p>
+                </article>
+                <article class="fx-card" data-fx="storm" tabindex="0" role="button" aria-pressed="false" data-reveal data-stagger="7">
+                    <span class="fx-card-num">08</span>
+                    <span class="fx-card-state">активен</span>
+                    <h3>Гроза</h3>
+                    <p>Тёмные облака и внезапные вспышки молний</p>
+                </article>
+                <article class="fx-card" data-fx="ocean" tabindex="0" role="button" aria-pressed="false" data-reveal data-stagger="8">
+                    <span class="fx-card-num">09</span>
+                    <span class="fx-card-state">активен</span>
+                    <h3>Океан</h3>
+                    <p>Спокойные вечерние волны и мерцание света на воде</p>
+                </article>
+            </section>
+
+            <section class="fx-hscroll" id="fx-hs-sec" aria-label="Демо: горизонтальная галерея на скролле">
+                <div class="fx-hs-sticky">
+                    <div class="fx-hs-head" data-reveal>
+                        <p class="fx-hs-kicker">Скролл-демо</p>
+                        <h3 class="fx-hs-title">Горизонтальная галерея</h3>
+                        <p class="fx-hs-hint">скрольте — лента едет поперёк</p>
+                    </div>
+                    <div class="fx-hs-strip" id="fx-hs-strip">
+                        <div class="fx-hs-tile"><span class="fx-hs-cap">кадр 01 · небо</span></div>
+                        <div class="fx-hs-tile"><span class="fx-hs-cap">кадр 02 · лаборатория</span></div>
+                        <div class="fx-hs-tile"><span class="fx-hs-cap">кадр 03 · код</span></div>
+                        <div class="fx-hs-tile"><span class="fx-hs-cap">кадр 04 · сеть</span></div>
+                        <div class="fx-hs-tile"><span class="fx-hs-cap">кадр 05 · алгоритмы</span></div>
+                        <div class="fx-hs-tile"><span class="fx-hs-cap">кадр 06 · запуск</span></div>
+                        <div class="fx-hs-tile"><span class="fx-hs-cap">кадр 07 · орбита</span></div>
+                        <div class="fx-hs-tile"><span class="fx-hs-cap">кадр 08 · финал</span></div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="fx-marquee" aria-hidden="true">
+                <div class="fx-marquee-track">
+                    <span>8И · webgl · glsl · ноль зависимостей · сияние · матрица · туманность · звёздное поле · гравитация · капли · синтвейв · гроза · океан ·&nbsp;</span>
+                    <span>8И · webgl · glsl · ноль зависимостей · сияние · матрица · туманность · звёздное поле · гравитация · капли · синтвейв · гроза · океан ·&nbsp;</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-inner">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand"><span class="logo" aria-hidden="true">8И</span><span>Школа ЦПМ</span></div>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul>
+                        <li><a href="index.html">Главная</a></li>
+                        <li><a href="about.html">О классе</a></li>
+                        <li><a href="schedule.html">Расписание</a></li>
+                        <li><a href="gallery.html">Галерея</a></li>
+                        <li><a href="contacts.html">Контакты</a></li>
+                        <li><a href="play.html">FX</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Контакты</h4>
+                    <ul>
+                        <li><a href="mailto:school@info@school-cpm.ru">school@info@school-cpm.ru</a></li>
+                        <li><a href="mailto:+7 926 396-64-70">+7 926 396-64-70</a></li>
+                        <li><a href="mailto:https://xn--j1ab.xn----7sb3aehik9cm.xn--p1ai/">https://xn--j1ab.xn----7sb3aehik9cm.xn--p1ai/</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 8И. Все права защищены.</p>
+            </div>
+        </div>
+    </footer>
+
+    <div id="scroll-progress" aria-hidden="true"></div>
+    <button id="back-to-top" type="button" aria-label="Наверх">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+    </button>
+
+    <script src="main.js"></script>
+    <script src="fx.js"></script>
+    <script>
+    /* Горизонтальная галерея: sticky-секция, лента едет поперёк при скролле.
+       Только play.html; без зависимостей; при prefers-reduced-motion — нативный скролл из CSS. */
+    (function () {
+        'use strict';
+        var wrap = document.getElementById('fx-hs-sec');
+        var strip = document.getElementById('fx-hs-strip');
+        if (!wrap || !strip) return;
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+        var target = 0;
+        var maxShift = 0;
+        var raf = 0;
+
+        function measure() {
+            var r = wrap.getBoundingClientRect();
+            var span = r.height - window.innerHeight;
+            target = span > 0 ? Math.min(1, Math.max(0, -r.top / span)) : 0;
+            maxShift = Math.max(0, strip.scrollWidth - (strip.parentElement ? strip.parentElement.clientWidth : window.innerWidth));
+        }
+
+        function tick() {
+            raf = 0;
+            measure();
+            strip.style.transform = 'translateX(' + (-target * maxShift).toFixed(1) + 'px)';
+        }
+
+        function onScroll() {
+            var r = wrap.getBoundingClientRect();
+            if (r.top < window.innerHeight && r.bottom > 0 && !raf) {
+                raf = requestAnimationFrame(tick);
+            }
+        }
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onScroll, { passive: true });
+        onScroll();
+    })();
+    </script>
+</body>
+</html>
