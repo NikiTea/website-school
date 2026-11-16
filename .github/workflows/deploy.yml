@@ -14,7 +14,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Build clean staging dir (только отслеживаемые файлы сайта)
+        run: |
+          mkdir -p "$RUNNER_TEMP/site"
+          git archive HEAD -- $(git ls-files | grep -vE '^\.github/') | tar -x -C "$RUNNER_TEMP/site"
+
       - name: Deploy static site to Cloudflare Pages
-        run: npx wrangler pages deploy . --project-name=website-school
+        run: npx wrangler pages deploy "$RUNNER_TEMP/site" --project-name=cpm-school
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
